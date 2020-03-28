@@ -58,6 +58,6 @@ type WorkerList struct {
 	Items           []Worker `json:"items"`
 }
 
-func init() {
+func init() { // nolint: gochecknoinits
 	SchemeBuilder.Register(&Worker{}, &WorkerList{})
 }
