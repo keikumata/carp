@@ -1,3 +1,7 @@
 domain: juan-lee.dev
 repo: github.com/juan-lee/carp
+resources:
+- group: carp
+  kind: Worker
+  version: v1alpha1
 version: "2"

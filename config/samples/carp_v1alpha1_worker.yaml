@@ -1,0 +1,7 @@
+apiVersion: carp.juan-lee.dev/v1alpha1
+kind: Worker
+metadata:
+  name: worker-sample
+spec:
+  # Add fields here
+  foo: bar
