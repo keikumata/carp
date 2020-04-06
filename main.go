@@ -26,7 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	carpv1alpha1 "github.com/juan-lee/carp/api/v1alpha1"
+	infrastructurev1alpha1 "github.com/juan-lee/carp/api/v1alpha1"
 	"github.com/juan-lee/carp/controllers"
 	// +kubebuilder:scaffold:imports
 )
@@ -39,7 +39,7 @@ var (
 func init() { // nolint: gochecknoinits
 	_ = clientgoscheme.AddToScheme(scheme)
 
-	_ = carpv1alpha1.AddToScheme(scheme)
+	_ = infrastructurev1alpha1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -72,6 +72,14 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Worker")
+		os.Exit(1)
+	}
+	if err = (&controllers.ManagedClusterReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("ManagedCluster"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ManagedCluster")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

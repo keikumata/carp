@@ -28,27 +28,27 @@ import (
 	infrastructurev1alpha1 "github.com/juan-lee/carp/api/v1alpha1"
 )
 
-// WorkerReconciler reconciles a Worker object
-type WorkerReconciler struct {
+// ManagedClusterReconciler reconciles a ManagedCluster object
+type ManagedClusterReconciler struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=workers,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=workers/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=managedclusters,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=managedclusters/status,verbs=get;update;patch
 
-func (r *WorkerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *ManagedClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	_ = r.Log.WithValues("worker", req.NamespacedName)
+	_ = r.Log.WithValues("managedcluster", req.NamespacedName)
 
 	// your logic here
 
 	return ctrl.Result{}, nil
 }
 
-func (r *WorkerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *ManagedClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&infrastructurev1alpha1.Worker{}).
+		For(&infrastructurev1alpha1.ManagedCluster{}).
 		Complete(r)
 }
