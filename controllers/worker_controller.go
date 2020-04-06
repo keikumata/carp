@@ -34,8 +34,8 @@ type WorkerReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=carp.juan-lee.dev,resources=workers,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=carp.juan-lee.dev,resources=workers/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=workers,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=workers/status,verbs=get;update;patch
 
 func (r *WorkerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()

@@ -1,7 +1,7 @@
-domain: juan-lee.dev
+domain: cluster.x-k8s.io
 repo: github.com/juan-lee/carp
 resources:
-- group: carp
+- group: infrastructure
   kind: Worker
   version: v1alpha1
 version: "2"

@@ -7,7 +7,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - carp.juan-lee.dev
+  - infrastructure.cluster.x-k8s.io
   resources:
   - workers
   verbs:
@@ -19,7 +19,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - carp.juan-lee.dev
+  - infrastructure.cluster.x-k8s.io
   resources:
   - workers/status
   verbs:
