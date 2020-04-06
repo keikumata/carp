@@ -66,14 +66,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.WorkerReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Worker"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Worker")
-		os.Exit(1)
-	}
 	if err = (&controllers.ManagedClusterReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("ManagedCluster"),
