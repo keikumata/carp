@@ -22,6 +22,7 @@ import (
 	"path"
 	"strings"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -147,19 +148,13 @@ func (c *Configuration) GenerateSecrets() ([]corev1.Secret, error) {
 	return secrets, nil
 }
 
-func (c *Configuration) ControlPlanePodSpec() *corev1.Pod {
+func (c *Configuration) ControlPlanePodSpec() *appsv1.Deployment {
 	initConfig := kubeadmapi.InitConfiguration{}
 	scheme.Scheme.Convert(&c.InitConfiguration, &initConfig, nil)
 	scheme.Scheme.Convert(&c.ClusterConfiguration, &initConfig.ClusterConfiguration, nil)
 	pods := controlplane.GetStaticPodSpecs(&initConfig.ClusterConfiguration, &initConfig.LocalAPIEndpoint)
 
 	combined := corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "controlplane",
-			Labels: map[string]string{
-				"app": "controlplane",
-			},
-		},
 		Spec: corev1.PodSpec{
 			Volumes: []corev1.Volume{
 				{
@@ -253,7 +248,31 @@ func (c *Configuration) ControlPlanePodSpec() *corev1.Pod {
 		}
 	}
 	combined.Spec.Containers = append(combined.Spec.Containers, etcdPod.Spec.Containers...)
-	return &combined
+
+	return &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "controlplane",
+			Labels: map[string]string{
+				"app": "controlplane",
+			},
+		},
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": "controlplane",
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "controlplane",
+					Labels: map[string]string{
+						"app": "controlplane",
+					},
+				},
+				Spec: combined.Spec,
+			},
+		},
+	}
 }
 
 func ControlPlaneServiceSpec() *corev1.Service {

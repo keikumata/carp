@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -46,6 +47,7 @@ type ManagedControlPlaneReconciler struct {
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 
 func (r *ManagedControlPlaneReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -133,8 +135,8 @@ func (r *ManagedControlPlaneReconciler) reconcileControlPlane(req ctrl.Request, 
 
 	desired := config.ControlPlanePodSpec()
 	desired.Namespace = req.Namespace
-	desired.Spec.Containers = append(desired.Spec.Containers, tunnel.ClientPodSpec().Spec.Containers...)
-	existing := corev1.Pod{}
+	desired.Spec.Template.Spec.Containers = append(desired.Spec.Template.Spec.Containers, tunnel.ClientPodSpec().Spec.Containers...)
+	existing := appsv1.Deployment{}
 	if err := r.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: desired.Name}, &existing); err != nil {
 		if apierrors.IsNotFound(err) {
 			log.Info("Control Plane pod not found, creating", "name", desired.Name)
@@ -143,13 +145,15 @@ func (r *ManagedControlPlaneReconciler) reconcileControlPlane(req ctrl.Request, 
 			if err := r.Create(ctx, desired); err != nil {
 				return ctrl.Result{}, err
 			}
+			return ctrl.Result{}, nil
 		}
+		return ctrl.Result{}, err
 	}
 
-	// log.Info("Control Plane pod found, updating", "name", desired.Name)
-	// if err := r.Update(ctx, desired); err != nil {
-	// 	return ctrl.Result{}, err
-	// }
+	log.Info("Control Plane pod found, updating", "name", desired.Name)
+	if err := r.Update(ctx, desired); err != nil {
+		return ctrl.Result{}, err
+	}
 	return ctrl.Result{}, nil
 }
 
@@ -159,7 +163,7 @@ func (r *ManagedControlPlaneReconciler) reconcileTunnelServer(req ctrl.Request, 
 
 	desired := tunnel.ServerPodSpec()
 	desired.Namespace = req.Namespace
-	existing := corev1.Pod{}
+	existing := appsv1.Deployment{}
 	if err := r.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: desired.Name}, &existing); err != nil {
 		if apierrors.IsNotFound(err) {
 			log.Info("Tunnel Server pod not found, creating", "name", desired.Name)
@@ -168,13 +172,15 @@ func (r *ManagedControlPlaneReconciler) reconcileTunnelServer(req ctrl.Request, 
 			if err := r.Create(ctx, desired); err != nil {
 				return ctrl.Result{}, err
 			}
+			return ctrl.Result{}, nil
 		}
+		return ctrl.Result{}, err
 	}
 
-	// log.Info("Tunnel Server pod found, updating", "name", desired.Name)
-	// if err := r.Update(ctx, desired); err != nil {
-	// 	return ctrl.Result{}, err
-	// }
+	log.Info("Tunnel Server pod found, updating", "name", desired.Name)
+	if err := r.Update(ctx, desired); err != nil {
+		return ctrl.Result{}, err
+	}
 	return ctrl.Result{}, nil
 }
 
@@ -193,7 +199,9 @@ func (r *ManagedControlPlaneReconciler) reconcileTunnelService(req ctrl.Request,
 			if err := r.Create(ctx, desired); err != nil {
 				return ctrl.Result{}, err
 			}
+			return ctrl.Result{}, nil
 		}
+		return ctrl.Result{}, err
 	}
 
 	// log.Info("Tunnel Server pod found, updating", "name", desired.Name)
@@ -218,14 +226,16 @@ func (r *ManagedControlPlaneReconciler) reconcileControlPlaneService(req ctrl.Re
 			if err := r.Create(ctx, desired); err != nil {
 				return ctrl.Result{}, err
 			}
+			return ctrl.Result{}, nil
 		}
+		return ctrl.Result{}, err
 	}
 
 	if len(existing.Status.LoadBalancer.Ingress) > 0 {
 		config.ClusterConfiguration.ControlPlaneEndpoint = existing.Status.LoadBalancer.Ingress[0].IP
 	}
 
-	// log.Info("Tunnel Server pod found, updating", "name", desired.Name)
+	// log.Info("Control Plane pod found, updating", "name", desired.Name)
 	// if err := r.Update(ctx, desired); err != nil {
 	// 	return ctrl.Result{}, err
 	// }

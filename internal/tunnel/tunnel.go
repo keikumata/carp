@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"golang.zx2c4.com/wireguard/wgcfg"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -126,42 +127,57 @@ func ClientPodSpec() *corev1.Pod {
 	}
 }
 
-func ServerPodSpec() *corev1.Pod {
-	return &corev1.Pod{
+func ServerPodSpec() *appsv1.Deployment {
+	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "tunnel-server",
 			Labels: map[string]string{
 				"app": "tunnel-server",
 			},
 		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Image:           "juanlee/wireguard:latest",
-					ImagePullPolicy: corev1.PullAlways,
-					Name:            "tunnel-server",
-					SecurityContext: &corev1.SecurityContext{
-						Capabilities: &corev1.Capabilities{
-							Add: []corev1.Capability{
-								"NET_ADMIN",
-								"SYS_MODULE",
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": "tunnel-server",
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "tunnel-server",
+					Labels: map[string]string{
+						"app": "tunnel-server",
+					},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Image:           "juanlee/wireguard:latest",
+							ImagePullPolicy: corev1.PullAlways,
+							Name:            "tunnel-server",
+							SecurityContext: &corev1.SecurityContext{
+								Capabilities: &corev1.Capabilities{
+									Add: []corev1.Capability{
+										"NET_ADMIN",
+										"SYS_MODULE",
+									},
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "tunnel-server",
+									MountPath: "/etc/wireguard",
+								},
 							},
 						},
 					},
-					VolumeMounts: []corev1.VolumeMount{
+					Volumes: []corev1.Volume{
 						{
-							Name:      "tunnel-server",
-							MountPath: "/etc/wireguard",
-						},
-					},
-				},
-			},
-			Volumes: []corev1.Volume{
-				{
-					Name: "tunnel-server",
-					VolumeSource: corev1.VolumeSource{
-						Secret: &corev1.SecretVolumeSource{
-							SecretName: "tunnel-server",
+							Name: "tunnel-server",
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
+									SecretName: "tunnel-server",
+								},
+							},
 						},
 					},
 				},
