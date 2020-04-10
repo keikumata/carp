@@ -1,2 +1,11 @@
 resources:
 - manager.yaml
+
+patchesStrategicMerge:
+- manager_pull_policy.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: carp-controller
+  newName: juanlee/carp-controller
+  newTag: latest
