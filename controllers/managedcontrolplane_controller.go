@@ -19,6 +19,7 @@ package controllers
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -30,6 +31,7 @@ import (
 
 	infrastructurev1alpha1 "github.com/juan-lee/carp/api/v1alpha1"
 	"github.com/juan-lee/carp/internal/kubeadm"
+	"github.com/juan-lee/carp/internal/tunnel"
 )
 
 // ManagedControlPlaneReconciler reconciles a ManagedControlPlane object
@@ -43,6 +45,7 @@ type ManagedControlPlaneReconciler struct {
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=managedcontrolplanes/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 
 func (r *ManagedControlPlaneReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -52,14 +55,32 @@ func (r *ManagedControlPlaneReconciler) SetupWithManager(mgr ctrl.Manager) error
 
 func (r *ManagedControlPlaneReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	_ = r.Log.WithValues("managedcontrolplane", req.NamespacedName)
+	log := r.Log.WithValues("managedcontrolplane", req.NamespacedName)
 
 	config := kubeadm.Defaults()
 	config.InitConfiguration.LocalAPIEndpoint.AdvertiseAddress = "172.17.0.10"
 	config.InitConfiguration.NodeRegistration.Name = "controlplane"
-	config.ClusterConfiguration.ControlPlaneEndpoint = "13.66.88.140"
+	config.ClusterConfiguration.KubernetesVersion = "v1.18.0"
+	config.ClusterConfiguration.Networking.ServiceSubnet = "172.18.0.0/12"
+
+	if result, err := r.reconcileTunnelService(req, config); err != nil {
+		return result, err
+	}
+
+	if result, err := r.reconcileControlPlaneService(req, config); err != nil {
+		return result, err
+	}
+
+	if config.ClusterConfiguration.ControlPlaneEndpoint == "" {
+		log.Info("ControlPlane ExternalIP missing, requeuing...")
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 30}, nil
+	}
 
 	if result, err := r.reconcileSecrets(req, config); err != nil {
+		return result, err
+	}
+
+	if result, err := r.reconcileTunnelServer(req, config); err != nil {
 		return result, err
 	}
 
@@ -78,6 +99,11 @@ func (r *ManagedControlPlaneReconciler) reconcileSecrets(req ctrl.Request, confi
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+	tunnelSecrets, err := tunnel.Secrets()
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	secrets = append(secrets, tunnelSecrets...)
 
 	for _, secret := range secrets {
 		secret.Namespace = req.Namespace
@@ -97,6 +123,7 @@ func (r *ManagedControlPlaneReconciler) reconcileSecrets(req ctrl.Request, confi
 			return ctrl.Result{}, err
 		}
 	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -105,11 +132,12 @@ func (r *ManagedControlPlaneReconciler) reconcileControlPlane(req ctrl.Request, 
 	log := r.Log.WithValues("managedcontrolplane", req.NamespacedName)
 
 	desired := config.ControlPlanePodSpec()
+	desired.Namespace = req.Namespace
+	desired.Spec.Containers = append(desired.Spec.Containers, tunnel.ClientPodSpec().Spec.Containers...)
 	existing := corev1.Pod{}
 	if err := r.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: desired.Name}, &existing); err != nil {
 		if apierrors.IsNotFound(err) {
 			log.Info("Control Plane pod not found, creating", "name", desired.Name)
-			desired.Namespace = req.Namespace
 
 			// TODO(jpang): set owner ref
 			if err := r.Create(ctx, desired); err != nil {
@@ -118,5 +146,88 @@ func (r *ManagedControlPlaneReconciler) reconcileControlPlane(req ctrl.Request, 
 		}
 	}
 
+	// log.Info("Control Plane pod found, updating", "name", desired.Name)
+	// if err := r.Update(ctx, desired); err != nil {
+	// 	return ctrl.Result{}, err
+	// }
+	return ctrl.Result{}, nil
+}
+
+func (r *ManagedControlPlaneReconciler) reconcileTunnelServer(req ctrl.Request, config *kubeadm.Configuration) (ctrl.Result, error) {
+	ctx := context.Background()
+	log := r.Log.WithValues("managedcontrolplane", req.NamespacedName)
+
+	desired := tunnel.ServerPodSpec()
+	desired.Namespace = req.Namespace
+	existing := corev1.Pod{}
+	if err := r.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: desired.Name}, &existing); err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Info("Tunnel Server pod not found, creating", "name", desired.Name)
+
+			// TODO(jpang): set owner ref
+			if err := r.Create(ctx, desired); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	}
+
+	// log.Info("Tunnel Server pod found, updating", "name", desired.Name)
+	// if err := r.Update(ctx, desired); err != nil {
+	// 	return ctrl.Result{}, err
+	// }
+	return ctrl.Result{}, nil
+}
+
+func (r *ManagedControlPlaneReconciler) reconcileTunnelService(req ctrl.Request, config *kubeadm.Configuration) (ctrl.Result, error) {
+	ctx := context.Background()
+	log := r.Log.WithValues("managedcontrolplane", req.NamespacedName)
+
+	desired := tunnel.ServerServiceSpec()
+	desired.Namespace = req.Namespace
+	existing := corev1.Service{}
+	if err := r.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: desired.Name}, &existing); err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Info("Tunnel Server service not found, creating", "name", desired.Name)
+
+			// TODO(jpang): set owner ref
+			if err := r.Create(ctx, desired); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	}
+
+	// log.Info("Tunnel Server pod found, updating", "name", desired.Name)
+	// if err := r.Update(ctx, desired); err != nil {
+	// 	return ctrl.Result{}, err
+	// }
+	return ctrl.Result{}, nil
+}
+
+func (r *ManagedControlPlaneReconciler) reconcileControlPlaneService(req ctrl.Request, config *kubeadm.Configuration) (ctrl.Result, error) {
+	ctx := context.Background()
+	log := r.Log.WithValues("managedcontrolplane", req.NamespacedName)
+
+	desired := kubeadm.ControlPlaneServiceSpec()
+	desired.Namespace = req.Namespace
+	existing := corev1.Service{}
+	if err := r.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: desired.Name}, &existing); err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Info("Control Plane service not found, creating", "name", desired.Name)
+
+			// TODO(jpang): set owner ref
+			if err := r.Create(ctx, desired); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	}
+
+	if len(existing.Status.LoadBalancer.Ingress) > 0 {
+		config.ClusterConfiguration.ControlPlaneEndpoint = existing.Status.LoadBalancer.Ingress[0].IP
+	}
+
+	// log.Info("Tunnel Server pod found, updating", "name", desired.Name)
+	// if err := r.Update(ctx, desired); err != nil {
+	// 	return ctrl.Result{}, err
+	// }
 	return ctrl.Result{}, nil
 }

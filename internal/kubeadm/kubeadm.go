@@ -20,9 +20,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	"k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	"k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta2"
@@ -154,6 +156,9 @@ func (c *Configuration) ControlPlanePodSpec() *corev1.Pod {
 	combined := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "controlplane",
+			Labels: map[string]string{
+				"app": "controlplane",
+			},
 		},
 		Spec: corev1.PodSpec{
 			Volumes: []corev1.Volume{
@@ -194,6 +199,14 @@ func (c *Configuration) ControlPlanePodSpec() *corev1.Pod {
 					},
 				},
 				{
+					Name: "tunnel-client",
+					VolumeSource: corev1.VolumeSource{
+						Secret: &corev1.SecretVolumeSource{
+							SecretName: "tunnel-client",
+						},
+					},
+				},
+				{
 					Name: "ca-certs",
 					VolumeSource: corev1.VolumeSource{
 						HostPath: &corev1.HostPathVolumeSource{
@@ -217,6 +230,12 @@ func (c *Configuration) ControlPlanePodSpec() *corev1.Pod {
 					pod.Spec.Containers[n].VolumeMounts[i].MountPath = "/etc/kubernetes"
 				}
 			}
+			for i := range pod.Spec.Containers[n].Command {
+				pod.Spec.Containers[n].Command[i] = strings.ReplaceAll(pod.Spec.Containers[n].Command[i], "--bind-address=127.0.0.1", "--bind-address=0.0.0.0")
+			}
+			if pod.Spec.Containers[n].Name == "kube-apiserver" {
+				pod.Spec.Containers[n].VolumeMounts = append(pod.Spec.Containers[n].VolumeMounts, corev1.VolumeMount{Name: "etcd-certs", MountPath: "/etc/kubernetes/pki/etcd"})
+			}
 		}
 		combined.Spec.Containers = append(combined.Spec.Containers, pod.Spec.Containers...)
 	}
@@ -227,9 +246,39 @@ func (c *Configuration) ControlPlanePodSpec() *corev1.Pod {
 			// Substitute 127.0.0.1 with empty string so liveness will use etcdPod ip instead.
 			etcdPod.Spec.Containers[n].LivenessProbe.HTTPGet.Host = ""
 		}
+		for i := range etcdPod.Spec.Containers[n].Command {
+			etcdPod.Spec.Containers[n].Command[i] = strings.ReplaceAll(etcdPod.Spec.Containers[n].Command[i], "--listen-client-urls=https://127.0.0.1:2379,https://172.17.0.10:2379", "--listen-client-urls=https://0.0.0.0:2379")
+			etcdPod.Spec.Containers[n].Command[i] = strings.ReplaceAll(etcdPod.Spec.Containers[n].Command[i], "--listen-metrics-urls=http://127.0.0.1:2381", "--listen-metrics-urls=http://0.0.0.0:2381")
+			etcdPod.Spec.Containers[n].Command[i] = strings.ReplaceAll(etcdPod.Spec.Containers[n].Command[i], "--listen-peer-urls=https://172.17.0.10:2380", "--listen-peer-urls=https://0.0.0.0:2380")
+		}
 	}
 	combined.Spec.Containers = append(combined.Spec.Containers, etcdPod.Spec.Containers...)
 	return &combined
+}
+
+func ControlPlaneServiceSpec() *corev1.Service {
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "controlplane",
+			Labels: map[string]string{
+				"app": "controlplane",
+			},
+		},
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeLoadBalancer,
+			Selector: map[string]string{
+				"app": "controlplane",
+			},
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "kube-apiserver",
+					Protocol:   corev1.ProtocolTCP,
+					Port:       6443,
+					TargetPort: intstr.FromInt(6443),
+				},
+			},
+		},
+	}
 }
 
 func hostPathTypePtr(h corev1.HostPathType) *corev1.HostPathType {
