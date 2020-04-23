@@ -6,19 +6,18 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.8
   creationTimestamp: null
-  name: managedcontrolplanes.infrastructure.cluster.x-k8s.io
+  name: workers.infrastructure.cluster.x-k8s.io
 spec:
   group: infrastructure.cluster.x-k8s.io
   names:
-    kind: ManagedControlPlane
-    listKind: ManagedControlPlaneList
-    plural: managedcontrolplanes
-    singular: managedcontrolplane
+    kind: Worker
+    listKind: WorkerList
+    plural: workers
+    singular: worker
   scope: Namespaced
   validation:
     openAPIV3Schema:
-      description: ManagedControlPlane is the Schema for the managedcontrolplanes
-        API
+      description: Worker is the Schema for the workers API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -33,15 +32,15 @@ spec:
         metadata:
           type: object
         spec:
-          description: ManagedControlPlaneSpec defines the desired state of ManagedControlPlane
+          description: WorkerSpec defines the desired state of Worker
           properties:
             foo:
-              description: Foo is an example field of ManagedControlPlane. Edit ManagedControlPlane_types.go
+              description: Foo is an example field of Worker. Edit Worker_types.go
                 to remove/update
               type: string
           type: object
         status:
-          description: ManagedControlPlaneStatus defines the observed state of ManagedControlPlane
+          description: WorkerStatus defines the observed state of Worker
           type: object
       type: object
   version: v1alpha1

@@ -74,12 +74,12 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "ManagedCluster")
 		os.Exit(1)
 	}
-	if err = (&controllers.ManagedControlPlaneReconciler{
+	if err = (&controllers.WorkerReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("ManagedControlPlane"),
+		Log:    ctrl.Log.WithName("controllers").WithName("Worker"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ManagedControlPlane")
+		setupLog.Error(err, "unable to create controller", "controller", "Worker")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

@@ -1,7 +1,7 @@
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
-kind: ManagedControlPlane
+kind: Worker
 metadata:
-  name: managedcontrolplane-sample
+  name: worker-sample
 spec:
   # Add fields here
   foo: bar

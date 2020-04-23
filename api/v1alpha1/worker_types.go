@@ -23,41 +23,41 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// ManagedControlPlaneSpec defines the desired state of ManagedControlPlane
-type ManagedControlPlaneSpec struct {
+// WorkerSpec defines the desired state of Worker
+type WorkerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of ManagedControlPlane. Edit ManagedControlPlane_types.go to remove/update
+	// Foo is an example field of Worker. Edit Worker_types.go to remove/update
 	Foo string `json:"foo,omitempty"`
 }
 
-// ManagedControlPlaneStatus defines the observed state of ManagedControlPlane
-type ManagedControlPlaneStatus struct {
+// WorkerStatus defines the observed state of Worker
+type WorkerStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +kubebuilder:object:root=true
 
-// ManagedControlPlane is the Schema for the managedcontrolplanes API
-type ManagedControlPlane struct {
+// Worker is the Schema for the workers API
+type Worker struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ManagedControlPlaneSpec   `json:"spec,omitempty"`
-	Status ManagedControlPlaneStatus `json:"status,omitempty"`
+	Spec   WorkerSpec   `json:"spec,omitempty"`
+	Status WorkerStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// ManagedControlPlaneList contains a list of ManagedControlPlane
-type ManagedControlPlaneList struct {
+// WorkerList contains a list of Worker
+type WorkerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ManagedControlPlane `json:"items"`
+	Items           []Worker `json:"items"`
 }
 
 func init() { // nolint: gochecknoinits
-	SchemeBuilder.Register(&ManagedControlPlane{}, &ManagedControlPlaneList{})
+	SchemeBuilder.Register(&Worker{}, &WorkerList{})
 }

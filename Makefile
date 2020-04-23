@@ -1,6 +1,5 @@
 # Image URL to use all building/pushing image targets
 IMG ?= carp-controller:latest
-WIREGUARD_IMG ?= wireguard:latest
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
@@ -59,10 +58,10 @@ generate: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
-docker-build: generate manifests docker-build-wireguard docker-build-carp
+docker-build: generate manifests docker-build-carp
 
 # Push the docker image
-docker-push: docker-push-wireguard docker-push-carp
+docker-push: docker-push-carp
 
 # Build the docker image
 docker-build-carp:
@@ -71,14 +70,6 @@ docker-build-carp:
 # Push the docker image
 docker-push-carp:
 	docker push ${IMG}
-
-# Build the docker image
-docker-build-wireguard: 
-	docker build . -t ${WIREGUARD_IMG}
-
-# Push the docker image
-docker-push-wireguard:
-	docker push ${WIREGUARD_IMG}
 
 # Dependencies
 $(CONTROLLER_GEN): $(TOOLS_DIR)/go.mod # Build controller-gen from tools folder.
