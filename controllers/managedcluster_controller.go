@@ -30,6 +30,7 @@ import (
 
 // ManagedClusterReconciler reconciles a ManagedCluster object
 type ManagedClusterReconciler struct {
+	bus.Client
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
@@ -39,11 +40,14 @@ type ManagedClusterReconciler struct {
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=managedclusters/status,verbs=get;update;patch
 
 func (r *ManagedClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+	ctx := context.Background()
 	_ = r.Log.WithValues("managedcluster", req.NamespacedName)
 
 	// your logic here
+	mc := &infrastructurev1alpha1.ManagedCluster{}
+	if err := r.Get(ctx, req.NamespacedName, mc); err != nil {
 
+	}
 	return ctrl.Result{}, nil
 }
 

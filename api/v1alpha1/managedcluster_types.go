@@ -36,6 +36,7 @@ type ManagedClusterSpec struct {
 type ManagedClusterStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	ID string `json:"id,omitempty"` // friendly id /managedCluster/underlayid/name ... TBD
 }
 
 // +kubebuilder:object:root=true
