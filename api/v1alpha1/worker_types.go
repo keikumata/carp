@@ -25,17 +25,14 @@ import (
 
 // WorkerSpec defines the desired state of Worker
 type WorkerSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of Worker. Edit Worker_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Capacity is the total number of managed control planes that can be scheduled to this cluster
+	Capacity int32 `json:"capacity"`
 }
 
 // WorkerStatus defines the observed state of Worker
 type WorkerStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// AvailableCapacity is the difference of the total capacity and current capacity for managed control planes
+	AvailableCapacity int32 `json:"availableCapacity,omitempty"`
 }
 
 // +kubebuilder:object:root=true

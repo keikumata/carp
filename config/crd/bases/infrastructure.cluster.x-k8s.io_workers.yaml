@@ -34,13 +34,22 @@ spec:
         spec:
           description: WorkerSpec defines the desired state of Worker
           properties:
-            foo:
-              description: Foo is an example field of Worker. Edit Worker_types.go
-                to remove/update
-              type: string
+            capacity:
+              description: Capacity is the total number of managed control planes
+                that can be scheduled to this cluster
+              format: int32
+              type: integer
+          required:
+          - capacity
           type: object
         status:
           description: WorkerStatus defines the observed state of Worker
+          properties:
+            availableCapacity:
+              description: AvailableCapacity is the difference of the total capacity
+                and current capacity for managed control planes
+              format: int32
+              type: integer
           type: object
       type: object
   version: v1alpha1
