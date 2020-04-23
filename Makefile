@@ -48,14 +48,14 @@ manifests: $(CONTROLLER_GEN)
 # Linting
 .PHONY: lint lint-full
 lint: $(GOLANGCI_LINT) ## Lint codebase
-	$(GOLANGCI_LINT) run -v
+	$(GOLANGCI_LINT) run -v .
 
 lint-full: $(GOLANGCI_LINT) ## Run slower linters to detect possible issues
-	$(GOLANGCI_LINT) run -v --fast=false
+	$(GOLANGCI_LINT) run -v --fast=false .
 
 # Generate code
 generate: $(CONTROLLER_GEN)
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./api/..."
 
 # Build the docker image
 docker-build: generate manifests docker-build-carp
