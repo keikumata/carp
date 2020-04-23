@@ -1,4 +1,4 @@
-package commands
+package workers
 
 import (
 	"github.com/juan-lee/carp/api/v1alpha1"

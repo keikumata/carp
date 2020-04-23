@@ -30,7 +30,6 @@ import (
 
 // ManagedClusterReconciler reconciles a ManagedCluster object
 type ManagedClusterReconciler struct {
-	bus.Client
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme

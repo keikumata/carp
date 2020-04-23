@@ -3,11 +3,15 @@ module github.com/juan-lee/carp
 go 1.14
 
 require (
+	github.com/Azure/azure-service-bus-go v0.10.0
 	github.com/apex/log v1.1.2
+	github.com/fatih/structs v1.1.0
 	github.com/go-logr/logr v0.1.0
 	github.com/google/uuid v1.1.1
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
+	github.com/prometheus/common v0.4.1
+	github.com/spf13/pflag v1.0.5
 	golang.zx2c4.com/wireguard v0.0.20200321-0.20200407055553-a4657f996d98
 	k8s.io/api v0.17.4
 	k8s.io/apimachinery v0.17.4
