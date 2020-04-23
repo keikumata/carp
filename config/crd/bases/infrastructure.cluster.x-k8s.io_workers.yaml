@@ -15,6 +15,8 @@ spec:
     plural: workers
     singular: worker
   scope: Namespaced
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       description: Worker is the Schema for the workers API
@@ -50,6 +52,11 @@ spec:
                 and current capacity for managed control planes
               format: int32
               type: integer
+            lastScheduledTime:
+              description: LastScheduledTime is the last time that a managed control
+                plane was scheduled to this cluster
+              format: date-time
+              type: string
           type: object
       type: object
   version: v1alpha1

@@ -33,9 +33,13 @@ type WorkerSpec struct {
 type WorkerStatus struct {
 	// AvailableCapacity is the difference of the total capacity and current capacity for managed control planes
 	AvailableCapacity int32 `json:"availableCapacity,omitempty"`
+
+	// LastScheduledTime is the last time that a managed control plane was scheduled to this cluster
+	LastScheduledTime metav1.Time `json:"lastScheduledTime,omitempty"`
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 
 // Worker is the Schema for the workers API
 type Worker struct {

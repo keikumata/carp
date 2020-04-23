@@ -3,5 +3,4 @@ kind: Worker
 metadata:
   name: worker-sample
 spec:
-  # Add fields here
-  foo: bar
+  capacity: 1
