@@ -1,4 +1,5 @@
 resources:
 - ./cert-manager.yaml
 - ./cluster-api-components.yaml
+- ./core-components.yaml
 - carp
