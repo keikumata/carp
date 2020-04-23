@@ -15,6 +15,8 @@ spec:
     plural: managedclusters
     singular: managedcluster
   scope: Namespaced
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       description: ManagedCluster is the Schema for the managedclusters API
@@ -41,6 +43,9 @@ spec:
           type: object
         status:
           description: ManagedClusterStatus defines the observed state of ManagedCluster
+          properties:
+            assignedWorker:
+              type: string
           type: object
       type: object
   version: v1alpha1
