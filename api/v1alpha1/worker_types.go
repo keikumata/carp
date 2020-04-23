@@ -20,8 +20,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+type WorkerPhase string
+
+const (
+	// WorkerRunning means the cluster is running and able to host control planes
+	WorkerRunning WorkerPhase = "Running"
+)
 
 // WorkerSpec defines the desired state of Worker
 type WorkerSpec struct {
@@ -31,8 +35,11 @@ type WorkerSpec struct {
 
 // WorkerStatus defines the observed state of Worker
 type WorkerStatus struct {
+	// Phase is the current lifecycle phase of the worker cluster
+	Phase WorkerPhase `json:"phase"`
+
 	// AvailableCapacity is the difference of the total capacity and current capacity for managed control planes
-	AvailableCapacity int32 `json:"availableCapacity,omitempty"`
+	AvailableCapacity *int32 `json:"availableCapacity,omitempty"`
 
 	// LastScheduledTime is the last time that a managed control plane was scheduled to this cluster
 	LastScheduledTime metav1.Time `json:"lastScheduledTime,omitempty"`

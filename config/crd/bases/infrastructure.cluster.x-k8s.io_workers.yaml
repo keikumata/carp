@@ -57,6 +57,11 @@ spec:
                 plane was scheduled to this cluster
               format: date-time
               type: string
+            phase:
+              description: Phase is the current lifecycle phase of the worker cluster
+              type: string
+          required:
+          - phase
           type: object
       type: object
   version: v1alpha1
