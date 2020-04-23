@@ -1,5 +1,7 @@
 # carp
 
+![CI](https://github.com/juan-lee/carp/workflows/CI/badge.svg)
+
 **C**luster **A**PI **R**esource **P**rovider is hackathon project that demonstrates how a
 distributed system for managing kubernetes clusters could work. CARP borrows distributed system
 design concepts from kubernetes, but instead of a cluster being comprised of virtual machines, a
