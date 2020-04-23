@@ -25,6 +25,7 @@ import (
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -57,6 +58,15 @@ func (r *ManagedClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result, r
 	if err := r.Get(ctx, req.NamespacedName, &mc); err != nil {
 		log.Error(err, "unable to fetch managed cluster")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	if !mc.ObjectMeta.DeletionTimestamp.IsZero() {
+		// get worker and increase available capacity
+		if err := r.unassignWorker(ctx, &mc); err != nil {
+			return ctrl.Result{}, err
+		}
+
+		return ctrl.Result{}, nil
 	}
 
 	defer func() {
@@ -104,6 +114,27 @@ func (r *ManagedClusterReconciler) assignWorker(ctx context.Context, mc *infrast
 	selectedWorker.Status.LastScheduledTime = metav1.Now()
 	if err := r.Status().Update(ctx, selectedWorker); err != nil {
 		return fmt.Errorf("unable to update selected worker status: %+v", err)
+	}
+
+	return nil
+}
+
+func (r *ManagedClusterReconciler) unassignWorker(ctx context.Context, mc *infrastructurev1alpha1.ManagedCluster) error {
+	mux.Lock()
+	defer mux.Unlock()
+
+	if mc.Status.AssignedWorker != nil {
+		var worker infrastructurev1alpha1.Worker
+		// assuming default namespace just for the moment
+		if err := r.Get(ctx, types.NamespacedName{Namespace: "default", Name: *mc.Status.AssignedWorker}, &worker); err != nil {
+			return err
+		}
+
+		mc.Status.AssignedWorker = nil
+		*worker.Status.AvailableCapacity--
+		if err := r.Status().Update(ctx, &worker); err != nil {
+			return fmt.Errorf("unable to update selected worker status: %+v", err)
+		}
 	}
 
 	return nil

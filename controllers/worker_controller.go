@@ -61,6 +61,8 @@ func (r *WorkerReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result, reterr er
 		worker.Status.LastScheduledTime = metav1.Now()
 	}
 
+	// need to handle update to capacity
+
 	worker.Status.Phase = infrastructurev1alpha1.WorkerRunning
 
 	return ctrl.Result{}, nil

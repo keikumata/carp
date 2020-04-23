@@ -3,4 +3,4 @@ kind: Worker
 metadata:
   name: worker-sample
 spec:
-  capacity: 1
+  capacity: 2
