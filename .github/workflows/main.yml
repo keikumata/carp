@@ -21,3 +21,14 @@ jobs:
 
     - name: make manager
       run: make manager
+
+    - name: make docker-build docker-push
+      env:
+        IMAGE: juanlee/carp-controller
+        GITHUB_SHA: ${{ github.sha }}
+        REGISTRY_USERNAME: juanlee
+        REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+      run: |
+        echo ${REGISTRY_PASSWORD} | docker login -u ${REGISTRY_USERNAME} --password-stdin
+        RELEASE_TAG="${GITHUB_SHA}"
+        IMG="${IMAGE}:${RELEASE_TAG}" make docker-build docker-push
