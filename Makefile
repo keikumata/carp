@@ -83,4 +83,3 @@ $(GORELEASER): $(TOOLS_DIR)/go.mod # Build goreleaser from tools folder.
 
 $(KUSTOMIZE): $(TOOLS_DIR)/go.mod # Build kustomize from tools folder.
 	cd $(TOOLS_DIR); go build -tags=tools -o $(BIN_DIR)/kustomize sigs.k8s.io/kustomize/kustomize/v3
-
