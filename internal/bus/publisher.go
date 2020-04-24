@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	servicebus "github.com/Azure/azure-service-bus-go"
-	"github.com/juan-lee/carp/messages/workers"
+	"github.com/juan-lee/carp/internal/messages/workers"
 )
 
 type ServiceBusPublisher struct {

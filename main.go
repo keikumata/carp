@@ -29,7 +29,7 @@ import (
 
 	infrastructurev1alpha1 "github.com/juan-lee/carp/api/v1alpha1"
 	"github.com/juan-lee/carp/controllers"
-	"github.com/juan-lee/carp/pkg/azure"
+	"github.com/juan-lee/carp/internal/azure"
 	// +kubebuilder:scaffold:imports
 )
 
