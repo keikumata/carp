@@ -51,7 +51,7 @@ lint: $(GOLANGCI_LINT) ## Lint codebase
 	$(GOLANGCI_LINT) run -v .
 
 lint-full: $(GOLANGCI_LINT) ## Run slower linters to detect possible issues
-	$(GOLANGCI_LINT) run -v --fast=false .
+	$(GOLANGCI_LINT) run -v --fast=false --timeout 5m0s .
 
 # Generate code
 generate: $(CONTROLLER_GEN)
