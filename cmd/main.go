@@ -10,9 +10,9 @@ import (
 	"github.com/apex/log"
 	"github.com/spf13/pflag"
 
-	"github.com/juan-lee/carp/bus"
-	"github.com/juan-lee/carp/messages"
-	"github.com/juan-lee/carp/messages/workers"
+	"github.com/juan-lee/carp/internal/bus"
+	"github.com/juan-lee/carp/internal/messages"
+	"github.com/juan-lee/carp/internal/messages/workers"
 )
 
 var (
