@@ -37,7 +37,7 @@ The Managed Cluster API defines the properties of a cluster that will be managed
 
 - Phase
 - Errors
-- Assigned Worker
+- Id (arm url style)
 
 ##### Controller Responsibilities
 
