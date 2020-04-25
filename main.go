@@ -32,6 +32,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/Azure/go-autorest/autorest/azure/auth"
 	carpv1alpha1 "github.com/juan-lee/carp/api/v1alpha1"
 	"github.com/juan-lee/carp/controllers"
 	"github.com/juan-lee/carp/internal/azure"
@@ -68,6 +69,17 @@ func main() {
 	settings, err := azure.GetSettings()
 	if err != nil {
 		setupLog.Error(err, "failed to get azure settings")
+		os.Exit(1)
+	}
+
+	if settings[auth.ClientID] == "" || settings[auth.ClientSecret] == "" || settings[auth.TenantID] == "" || settings[auth.SubscriptionID] == "" {
+		secretLen := len(settings[auth.ClientID])
+		setupLog.WithValues(
+			"app", settings[auth.ClientID],
+			"tenant", settings[auth.ClientID],
+			"subscription", settings[auth.ClientID],
+			"length of secret", secretLen,
+		).Error(err, "azure credentials not fully populated")
 		os.Exit(1)
 	}
 
